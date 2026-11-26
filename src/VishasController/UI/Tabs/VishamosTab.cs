@@ -1,20 +1,12 @@
 namespace VishasController.UI.Tabs;
 
 /// <summary>
-/// 비샤모스 탭: 장면 선택·캐릭터 배치 자리(비활성, 준비 중).
+/// 비샤모스 탭: 장면 선택·캐릭터 배치 자리(비활성).
 /// </summary>
 public sealed class VishamosTab : UserControl
 {
     public VishamosTab()
     {
-        var note = new Label
-        {
-            Text = "준비 중: 비샤모스 연결 기능은 아직 없습니다.",
-            Dock = DockStyle.Top,
-            AutoSize = true,
-            Padding = new Padding(3, 6, 3, 6),
-        };
-
         var scenes = new GroupBox { Text = "장면 [Vishamos-Space]", Dock = DockStyle.Fill };
         scenes.Controls.Add(new ListBox { Dock = DockStyle.Fill, Enabled = false });
         var sceneButtons = new FlowLayoutPanel { Dock = DockStyle.Bottom, AutoSize = true };
@@ -31,6 +23,5 @@ public sealed class VishamosTab : UserControl
         grid.Controls.Add(characters, 1, 0);
 
         Controls.Add(grid);
-        Controls.Add(note);
     }
 }

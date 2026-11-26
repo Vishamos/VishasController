@@ -33,6 +33,9 @@ public sealed class TrayIcons : IDisposable
         _ => Color.FromArgb(140, 140, 140),
     };
 
+    /// <summary>준비 중(아직 연결 기능이 없음) 점 색. 탭·종합 표에만 쓰고 트레이 아이콘에는 쓰지 않는다.</summary>
+    public static readonly Color PendingColor = Color.Black;
+
     static Icon Draw(Health health, bool unread)
     {
         int size = Math.Max(16, SystemInformation.SmallIconSize.Width);

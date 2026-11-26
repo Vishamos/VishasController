@@ -5,7 +5,7 @@ using VishasController.UI.Tabs;
 namespace VishasController.UI;
 
 /// <summary>
-/// 메인 창: 탭 7개와 아래 상태 표시줄. 닫기 버튼을 눌러도 종료하지 않고 트레이로 숨는다.
+/// 메인 창: 탭 4개와 아래 상태 표시줄. 닫기 버튼을 눌러도 종료하지 않고 트레이로 숨는다.
 /// </summary>
 public sealed class MainForm : Form
 {
@@ -13,11 +13,9 @@ public sealed class MainForm : Form
 
     readonly TabControl _tabs;
     readonly TabPage _chzzkPage;
-    readonly TabPage _synapsePage;
-    readonly Dictionary<TabPage, Health> _dots = new();   // 없는 탭(종합)은 점을 그리지 않는다
+    readonly Dictionary<TabPage, Color> _dots = new();   // 없는 탭(종합)은 점을 그리지 않는다
     readonly OverviewTab _overview = new();
     readonly ChatTab _chat = new();
-    readonly SynapseTab _synapse = new();
     readonly ToolStripStatusLabel _serverLabel;
     readonly ToolStripStatusLabel _chzzkLabel;
     readonly ToolStripStatusLabel _countLabel;
@@ -25,10 +23,10 @@ public sealed class MainForm : Form
     /// <summary>사용자가 치지직 탭을 보고 있게 됐을 때 (안 읽음 표시를 지우는 데 쓴다)</summary>
     public event Action? Viewed;
 
-    /// <summary>시냅스 탭에서 "다시 접속"을 눌렀을 때</summary>
+    /// <summary>종합 탭 시냅스 줄에서 "다시 접속"을 눌렀을 때</summary>
     public event Action? ReconnectRequested;
 
-    /// <summary>시냅스 탭에서 "서버 주소 설정…"을 눌렀을 때</summary>
+    /// <summary>종합 탭 시냅스 줄에서 "주소 설정…"을 눌렀을 때</summary>
     public event Action? SettingsRequested;
 
     public MainForm()
@@ -49,17 +47,14 @@ public sealed class MainForm : Form
         _tabs.DrawItem += DrawTab;
         _tabs.SelectedIndexChanged += (_, _) => { if (IsBeingWatched) Viewed?.Invoke(); };
 
-        AddPage("종합", _overview, dot: false);
-        AddPage("OBS", new ObsTab(), dot: true);
-        _chzzkPage = AddPage(ChzzkTitle, _chat, dot: true);
-        _synapsePage = AddPage("시냅스", _synapse, dot: true);
-        AddPage("페이스", new PendingTab("페이스"), dot: true);
-        AddPage("바디", new PendingTab("바디"), dot: true);
-        AddPage("비샤모스", new VishamosTab(), dot: true);
+        AddPage("종합", _overview, dot: null);
+        AddPage("OBS", new ObsTab(), dot: TrayIcons.PendingColor);
+        _chzzkPage = AddPage(ChzzkTitle, _chat, dot: TrayIcons.ColorOf(Health.Idle));
+        AddPage("비샤모스", new VishamosTab(), dot: TrayIcons.PendingColor);
 
         _chat.CountChanged += UpdateCount;
-        _synapse.ReconnectClicked += () => ReconnectRequested?.Invoke();
-        _synapse.SettingsClicked += () => SettingsRequested?.Invoke();
+        _overview.ReconnectClicked += () => ReconnectRequested?.Invoke();
+        _overview.SettingsClicked += () => SettingsRequested?.Invoke();
 
         var status = new StatusStrip();
         _serverLabel = new ToolStripStatusLabel("서버: -");
@@ -107,13 +102,9 @@ public sealed class MainForm : Form
         _chzzkLabel.ForeColor = color;
     }
 
-    /// <summary>시냅스 탭 점·내용과 종합 탭의 시냅스 줄을 바꾼다.</summary>
-    public void SetSynapse(Health health, string status, string serverUrl, string connection)
-    {
-        SetDot(_synapsePage, health);
-        _synapse.SetState(serverUrl, status, TrayIcons.ColorOf(health), connection);
-        _overview.SetRow("시냅스", health, status);
-    }
+    /// <summary>종합 탭의 시냅스 줄을 바꾼다.</summary>
+    public void SetSynapse(Health health, string status, string serverUrl, string connection) =>
+        _overview.SetSynapse(health, status, serverUrl, connection);
 
     /// <summary>치지직 탭 점과 종합 탭의 치지직 줄을 바꾼다.</summary>
     public void SetChzzk(Health health, string status)
@@ -141,20 +132,22 @@ public sealed class MainForm : Form
         base.OnFormClosing(e);
     }
 
-    TabPage AddPage(string title, UserControl content, bool dot)
+    /// <param name="dot">탭 제목 앞 점 색. null이면 점을 그리지 않는다.</param>
+    TabPage AddPage(string title, UserControl content, Color? dot)
     {
         content.Dock = DockStyle.Fill;
         var page = new TabPage(title) { UseVisualStyleBackColor = true };
         page.Controls.Add(content);
         _tabs.TabPages.Add(page);
-        if (dot) _dots[page] = Health.Idle;
+        if (dot is Color color) _dots[page] = color;
         return page;
     }
 
     void SetDot(TabPage page, Health health)
     {
-        if (_dots[page] == health) return;
-        _dots[page] = health;
+        var color = TrayIcons.ColorOf(health);
+        if (_dots[page] == color) return;
+        _dots[page] = color;
         _tabs.Invalidate();
     }
 
@@ -166,12 +159,12 @@ public sealed class MainForm : Form
         using (var bg = new SolidBrush(SystemColors.Control)) g.FillRectangle(bg, bounds);
 
         int textLeft = bounds.Left;
-        if (_dots.TryGetValue(page, out var health))
+        if (_dots.TryGetValue(page, out var color))
         {
             int d = Math.Max(6, _tabs.Font.Height / 2);
             var dot = new Rectangle(bounds.Left + 6, bounds.Top + (bounds.Height - d) / 2, d, d);
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            using var b = new SolidBrush(TrayIcons.ColorOf(health));
+            using var b = new SolidBrush(color);
             g.FillEllipse(b, dot);
             textLeft = dot.Right + 2;
         }

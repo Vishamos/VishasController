@@ -54,8 +54,6 @@ public sealed class TrayContext : ApplicationContext
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(_balloonItem);
         menu.Items.Add(_soundItem);
-        menu.Items.Add("서버 주소 설정…", null, (_, _) => OpenSettings());
-        menu.Items.Add("다시 접속", null, async (_, _) => await RestartClientAsync());
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("종료", null, async (_, _) => await ExitAsync());
 
@@ -258,7 +256,7 @@ public sealed class TrayContext : ApplicationContext
         _mainForm.SetServerStatus(serverText, TrayIcons.ColorOf(serverHealth));
         _mainForm.SetChzzkStatus(chzzkText, TrayIcons.ColorOf(ChzzkHealth(_chzzk)));
 
-        // 탭 점 색 (명세 02 §2.5·§2.6). 상태 표시줄·트레이 아이콘과 기준이 조금 다르다.
+        // 탭·종합 표 점 색 (명세 02 §2.5·§2.6). 상태 표시줄·트레이 아이콘과 기준이 조금 다르다.
         var synapseHealth = _link switch
         {
             LinkState.Registered => Health.Ok,
