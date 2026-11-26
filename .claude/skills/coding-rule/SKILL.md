@@ -43,7 +43,7 @@ description: VishasController C# 코딩 표준. 코드를 작성·수정·리뷰
 - 받은 문자열(닉네임, 채팅 내용, 이모지 URL)은 사용자 입력으로 취급한다. 실행·경로·URL 열기에 그대로 쓰지 않는다.
 
 ## 7. 서버 주소와 로그
-- 서버 주소는 `AppSettings`(`%AppData%\VishasController\settings.json`)에서만 읽는다. 코드 기본값은 `ws://localhost:4000`.
+- 서버 주소는 `AppSettings`(`%LOCALAPPDATA%\VishaSTD\controller\settings.json`, 명세 02 §5)에서만 읽는다. 코드 기본값은 `ws://localhost:4000`.
 - 서버 주소, 받은 메시지 전체, 설정 객체를 로그·알림 풍선에 쓰지 않는다. 에러는 예외 종류·종료 코드·에러 코드만 남긴다.
 - 상태 표시줄에 주소를 보여 줄 때는 방송 화면에 잡힐 수 있으므로 호스트를 가린다(새로 넣을 때 제안 먼저).
 

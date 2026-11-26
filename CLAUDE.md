@@ -6,7 +6,7 @@
 **작업 흐름은 `visha-common:main-thread`를 따른다.** 역할(developer·qa·security)과 공통 절차는 `visha-common` 플러그인에 있고, 이 프로젝트에만 해당하는 것은 아래 프로젝트 스킬에 있다.
 
 ## 안전 규칙
-1. **서버 주소(LAN IP)를 코드·문서·로그·커밋에 적지 않는다.** 주소는 `%AppData%\VishasController\settings.json`에만 있고, 이 파일은 읽지 않는다(deny). 코드의 기본값은 `ws://localhost:4000`만 쓴다.
+1. **서버 주소(LAN IP)를 코드·문서·로그·커밋에 적지 않는다.** 주소는 `%LOCALAPPDATA%\VishaSTD\controller\settings.json`(옛 위치 `%AppData%\VishasController\settings.json`)에만 있고, 이 파일은 읽지 않는다(deny). 같은 부모 폴더의 VishaSynapse 설정(`VishaSTD\server\`, `.env` 포함)도 읽지 않는다. 코드의 기본값은 `ws://localhost:4000`만 쓴다.
 2. 통신 규약의 기준은 VishaSynapse `docs/protocol/README.md`다. **다른 저장소는 읽기 전용**이며 GitHub에서 `gh api`로 읽는다(로컬 사본은 쓰지 않음). 서버 쪽 수정이 필요하면 `visha-common:git-issue`로 그 저장소에 이슈를 올린다.
 3. 실행 허용: `simple-test`의 빌드·테스트 명령. 트레이 앱과 `tools/TestServer`를 띄워 보는 것은 사용자가 한다. 실제 VishaSynapse 서버에는 접속하지 않는다.
 4. 의존성(NuGet 패키지) 추가는 사용자 승인 후에 한다.
@@ -27,7 +27,7 @@
 | `src/VishasController/` | 트레이 앱. `Net/`(서버 접속·메시지 해석), `UI/`(메인 창, `Tabs/` 탭별 화면, 설정 창, 아이콘), `TrayContext.cs`(상태·알림 조율) |
 | `tools/TestServer/` | VishaSynapse 대역 테스트 서버(콘솔 명령으로 채팅·상태를 흉내) |
 | `.temp/`, `.private/` | 임시 파일, security 보고서 (git 제외) |
-| `%AppData%\VishasController\` | 앱 설정 `settings.json`(읽지 않음), qa 시나리오 로그 `logs\qa_scenario.log` |
+| `%LOCALAPPDATA%\VishaSTD\controller\` | 앱 설정 `settings.json`(읽지 않음), qa 시나리오 로그 `logs\qa_scenario.log`. 옛 위치 `%AppData%\VishasController\`(UI-7 전) |
 | VishaSynapse (GitHub `Vishamos/VishaSynapse`) | 접속·등록·메시지 규약: `docs/protocol/README.md`(§5a 치지직) |
 
 | 프로젝트 스킬 | 쓰는 때 |

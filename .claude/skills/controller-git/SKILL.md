@@ -9,7 +9,7 @@ description: VishasController에서 커밋할 때 visha-common:git-commit에 더
 
 ## 커밋
 - 작성 에이전트: `[VishasController-<에이전트>]` (예: `[VishasController-Main]`, `[VishasController-Developer]`)
-- 커밋하지 않는 것: `bin/`, `obj/`, `.vs/`(이미 git 제외), `%AppData%\VishasController\`의 파일(저장소 밖)
+- 커밋하지 않는 것: `bin/`, `obj/`, `.vs/`(이미 git 제외), `%LOCALAPPDATA%\VishaSTD\`·`%AppData%\VishasController\`의 파일(저장소 밖)
 
 ## security 실행 조건
 변경이 다음 중 하나에 해당하면 메인 스레드가 `visha-common:security` 에이전트를 부른다.
