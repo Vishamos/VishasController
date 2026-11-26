@@ -2,11 +2,11 @@
 
 - **다루는 것:** 트레이에서 여는 컨트롤 창, 탭 5개와 시냅스 탭의 하위 탭 3개, 탭 상태 표시, 모듈 줄의 버튼(⏻ ▶️ ⚙️)과 ⚙️ 설정 창, 로그 탭. 이미 있는 기능(서버 연결, 치지직 채팅·상태)은 연결하고, 나머지는 **자리만 만든다**(비활성 컨트롤).
 - **다루지 않는 것:** ⏻ 실제 실행(Proc-1), ▶️ 기능 켜기·끄기(서버 제어 메시지 필요), 바디·페이스 연결 상태 받기(VishaSynapse Q19-2), OBS·비샤모스 제어, 프리셋 적용, 전역 단축키, 로그 파일 저장.
-- **근거 노션:** `VishaSTD / VishasController` (2026-11-26 02:11 판). 태그 `[vc-tray]`, `[vc-quick_setting]`, `[vc-window]`, `[vc-window-tab]`, `[vc-simple_module]`, `[vc-module-controll]`, `[vc-preset]`, `[vc-preference]`
+- **근거 노션:** `VishaSTD / VishasController` (2026-11-26 02:11 판). 태그 `[vc-tray]`, `[vc-quick_setting]`, `[vc-window]`, `[vc-window-tab]`, `[vc-simple_module]`, `[vc-module-control]`, `[vc-preset]`, `[vc-preference]`
 - **참조 규약:** 없음(새 메시지 없음). 서버 메시지는 명세 01을 따른다.
 - **용어:** **모듈** = 컨트롤러가 상태를 확인하는 대상. Synapse 규약의 "클라이언트"와 다르다.
   - **간단 모듈**(`[vc-simple_module]`): 시냅스, 바디, 페이스. 시냅스 탭 › 상태의 줄 하나로 표시(⏻ ▶️ ⚙️)
-  - **제어 모듈**(`[vc-module-controll]`): 치지직, OBS, 비샤모스. 자기 탭이 있다
+  - **제어 모듈**(`[vc-module-control]`): 치지직, OBS, 비샤모스. 자기 탭이 있다
 
 ## 1. 창과 트레이
 
