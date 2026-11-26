@@ -49,12 +49,16 @@ public sealed class ModuleRow : TableLayoutPanel
         _iconFont = new Font(IconFontName.Value, Control.DefaultFont.SizeInPoints);
 
         var buttons = new FlowLayoutPanel { AutoSize = true, Margin = Padding.Empty, WrapContents = false };
-        var run = new Button { Text = RunGlyph, Font = _iconFont, AutoSize = true, Enabled = false };
+        var run = new Button { Text = RunGlyph, Font = _iconFont, Enabled = false };
+        // 세 버튼은 같은 정사각형(명세 02 §4.5). 한 변은 아이콘 글꼴로 계산한 버튼 높이라 고 DPI에서도 비율이 맞는다
+        var side = run.GetPreferredSize(Size.Empty).Height;
+        var buttonSize = new Size(side, side);
+        run.Size = buttonSize;
         _toolTip.SetToolTip(run, "실행");
         buttons.Controls.Add(run);
         if (hasToggle)
         {
-            var toggle = new CheckBox { Text = ToggleOff, Font = _iconFont, Appearance = Appearance.Button, AutoSize = true, Enabled = false };
+            var toggle = new CheckBox { Text = ToggleOff, Font = _iconFont, Appearance = Appearance.Button, TextAlign = ContentAlignment.MiddleCenter, Size = buttonSize, Enabled = false };
             _toolTip.SetToolTip(toggle, "기능 켜기");
             toggle.CheckedChanged += (_, _) =>
             {
@@ -63,7 +67,7 @@ public sealed class ModuleRow : TableLayoutPanel
             };
             buttons.Controls.Add(toggle);
         }
-        var settings = new Button { Text = SettingsGlyph, Font = _iconFont, AutoSize = true };
+        var settings = new Button { Text = SettingsGlyph, Font = _iconFont, Size = buttonSize };
         _toolTip.SetToolTip(settings, "설정");
         settings.Click += (_, _) => SettingsClicked?.Invoke();
         buttons.Controls.Add(settings);
