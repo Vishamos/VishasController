@@ -8,7 +8,7 @@
 ## 안전 규칙
 1. **서버 주소(LAN IP)를 코드·문서·로그·커밋에 적지 않는다.** 주소는 `%LOCALAPPDATA%\VishaSTD\controller\settings.json`(옛 위치 `%AppData%\VishasController\settings.json`)에만 있고, 이 파일은 읽지 않는다(deny). 같은 부모 폴더의 VishaSynapse 설정(`VishaSTD\server\`, `.env` 포함)도 읽지 않는다. 코드의 기본값은 `ws://localhost:4000`만 쓴다.
 2. 통신 규약의 기준은 VishaSynapse `docs/protocol/README.md`다. **다른 저장소는 읽기 전용**이며 GitHub에서 `gh api`로 읽는다(로컬 사본은 쓰지 않음). 서버 쪽 수정이 필요하면 `visha-common:git-issue`로 그 저장소에 이슈를 올린다.
-3. 실행 허용: `simple-test`의 빌드·테스트 명령. 트레이 앱과 `tools/TestServer`를 띄워 보는 것은 사용자가 한다. 실제 VishaSynapse 서버에는 접속하지 않는다.
+3. 실행 허용: `simple-test`의 빌드·테스트 명령. 화면에 보이는 변경(UI 작업)이 커밋되면 사용자 화면 확인 전에 메인 스레드가 `publish_controller.bat nopause`를 실행한다(배포 파일 만들기와 `VISHAS_CONTROLLER_BUILD_DIR` 폴더 복사. 셸에 변수가 없으면 Windows 사용자 환경 변수 값을 넘기고, 값은 출력하지 않는다). 트레이 앱과 `tools/TestServer`를 띄워 보는 것은 사용자가 한다. 실제 VishaSynapse 서버에는 접속하지 않는다.
 4. 의존성(NuGet 패키지) 추가는 사용자 승인 후에 한다.
 5. 권한 규칙(deny/ask)에 막히면 다른 도구·명령으로 우회하지 않고 보고한다. 같은 문제로 수정과 실패가 3회 반복되면 멈추고 원인과 함께 보고한다. (서브에이전트는 플러그인 정의에 같은 규칙이 있다. 이 줄은 메인 스레드용)
 6. **규칙과 어긋나는 작업이 필요하면 하기 전에 멈추고 "규칙 예외 제안"으로 알린다.** 한 뒤에 보고하지 않는다.
