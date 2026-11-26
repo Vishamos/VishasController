@@ -19,6 +19,7 @@ public sealed class TrayContext : ApplicationContext
     readonly TrayIcons _icons = new();
     readonly MainForm _mainForm;
     readonly ToolStripMenuItem _balloonItem;
+    readonly ToolStripMenuItem _statusAlertItem;
     readonly ToolStripMenuItem _soundItem;
     readonly System.Windows.Forms.Timer _balloonTimer;
 
@@ -43,15 +44,17 @@ public sealed class TrayContext : ApplicationContext
         _mainForm.ModuleSettingsRequested += OpenModuleSettings;
         _ui = SynchronizationContext.Current ?? new WindowsFormsSynchronizationContext();
 
-        _balloonItem = new ToolStripMenuItem("채팅 알림 풍선", null, (_, _) => ToggleBalloon())
+        // 빠른 설정(명세 02 §1.2). 창 열기는 왼쪽 클릭과 같아 메뉴에 두지 않는다.
+        _balloonItem = new ToolStripMenuItem("알림", null, (_, _) => ToggleBalloon())
         { Checked = _settings.ShowBalloon };
-        _soundItem = new ToolStripMenuItem("알림음", null, (_, _) => ToggleSound())
+        _statusAlertItem = new ToolStripMenuItem("중요 경고", null, (_, _) => ToggleStatusAlerts())
+        { Checked = _settings.ShowStatusAlerts };
+        _soundItem = new ToolStripMenuItem("알림 소리", null, (_, _) => ToggleSound())
         { Checked = _settings.PlaySound };
 
         var menu = new ContextMenuStrip();
-        menu.Items.Add("창 열기", null, (_, _) => _mainForm.ShowAndActivate());
-        menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(_balloonItem);
+        menu.Items.Add(_statusAlertItem);
         menu.Items.Add(_soundItem);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("종료", null, async (_, _) => await ExitAsync());
@@ -75,13 +78,20 @@ public sealed class TrayContext : ApplicationContext
 
         StartClient();
         Refresh();
-        ShowBalloon("VishasController", "트레이에서 실행 중입니다. 아이콘을 클릭하면 창이 열립니다.", ToolTipIcon.Info, force: true);
+        ShowBalloon("VishasController", "트레이에서 실행 중입니다. 아이콘을 클릭하면 창이 열립니다.", ToolTipIcon.Info, status: true);
     }
 
     void ToggleBalloon()
     {
         _settings.ShowBalloon = !_settings.ShowBalloon;
         _balloonItem.Checked = _settings.ShowBalloon;
+        _settings.Save();
+    }
+
+    void ToggleStatusAlerts()
+    {
+        _settings.ShowStatusAlerts = !_settings.ShowStatusAlerts;
+        _statusAlertItem.Checked = _settings.ShowStatusAlerts;
         _settings.Save();
     }
 
@@ -142,11 +152,11 @@ public sealed class TrayContext : ApplicationContext
             _chzzk = ChzzkState.Unknown;   // 서버와 끊기면 치지직 상태도 알 수 없다
 
         if (prev == LinkState.Registered && state != LinkState.Registered && state != LinkState.Stopped)
-            ShowBalloon("서버 연결 끊김", "다시 접속하는 동안 채팅을 받지 못합니다.", ToolTipIcon.Warning, force: true);
+            ShowBalloon("서버 연결 끊김", "다시 접속하는 동안 채팅을 받지 못합니다.", ToolTipIcon.Warning, status: true);
         else if (state == LinkState.Registered && _everRegistered)
-            ShowBalloon("서버 다시 연결됨", "끊긴 동안의 채팅은 받지 못했습니다.", ToolTipIcon.Info, force: true);
+            ShowBalloon("서버 다시 연결됨", "끊긴 동안의 채팅은 받지 못했습니다.", ToolTipIcon.Info, status: true);
         else if (state == LinkState.Unsupported && prev != LinkState.Unsupported)
-            ShowBalloon("서버가 컨트롤러를 지원하지 않음", "서버에 시그니처 41이 아직 없습니다. 1분마다 다시 시도합니다.", ToolTipIcon.Error, force: true);
+            ShowBalloon("서버가 컨트롤러를 지원하지 않음", "서버에 시그니처 41이 아직 없습니다. 1분마다 다시 시도합니다.", ToolTipIcon.Error, status: true);
 
         if (state == LinkState.Registered) _everRegistered = true;
         _mainForm.AddLog(Module.Synapse, SynapseText());
@@ -163,16 +173,16 @@ public sealed class TrayContext : ApplicationContext
             switch (state)
             {
                 case ChzzkState.Disconnected:
-                    ShowBalloon("치지직 연결 끊김", "서버가 다시 연결하는 중입니다. 이 동안의 채팅은 받지 못합니다.", ToolTipIcon.Warning, force: true);
+                    ShowBalloon("치지직 연결 끊김", "서버가 다시 연결하는 중입니다. 이 동안의 채팅은 받지 못합니다.", ToolTipIcon.Warning, status: true);
                     break;
                 case ChzzkState.AuthRequired:
-                    ShowBalloon("치지직 재로그인 필요", "서버 PC에서 콘솔에 나온 인증 URL로 로그인해 주세요.", ToolTipIcon.Error, force: true);
+                    ShowBalloon("치지직 재로그인 필요", "서버 PC에서 콘솔에 나온 인증 URL로 로그인해 주세요.", ToolTipIcon.Error, status: true);
                     break;
                 case ChzzkState.Disabled:
-                    ShowBalloon("치지직 연동 꺼짐", "서버가 치지직 연동을 하지 않고 있습니다. 서버 설정을 확인한 뒤 서버를 다시 켜 주세요.", ToolTipIcon.Error, force: true);
+                    ShowBalloon("치지직 연동 꺼짐", "서버가 치지직 연동을 하지 않고 있습니다. 서버 설정을 확인한 뒤 서버를 다시 켜 주세요.", ToolTipIcon.Error, status: true);
                     break;
                 case ChzzkState.Connected when prev is ChzzkState.Disconnected or ChzzkState.AuthRequired:
-                    ShowBalloon("치지직 다시 연결됨", "채팅을 다시 받습니다.", ToolTipIcon.Info, force: true);
+                    ShowBalloon("치지직 다시 연결됨", "채팅을 다시 받습니다.", ToolTipIcon.Info, status: true);
                     break;
             }
         }
@@ -219,7 +229,7 @@ public sealed class TrayContext : ApplicationContext
         var title = count == 1 ? $"{last.Nickname}" : $"새 채팅 {count}개";
         var role = last.RoleLabel.Length > 0 ? $"[{last.RoleLabel}] " : "";
         var body = count == 1 ? role + last.DisplayContent : $"{role}{last.Nickname}: {last.DisplayContent}";
-        ShowBalloon(title, body, ToolTipIcon.None, force: false);
+        ShowBalloon(title, body, ToolTipIcon.None, status: false);
     }
 
     void ClearUnread()
@@ -230,14 +240,14 @@ public sealed class TrayContext : ApplicationContext
         Refresh();
     }
 
-    /// <param name="force">채팅 알림 끄기와 상관없이 띄운다 (상태 경고)</param>
-    void ShowBalloon(string title, string text, ToolTipIcon icon, bool force)
+    /// <param name="status">true면 상태 알림("중요 경고" 설정), false면 채팅 알림("알림" 설정)</param>
+    void ShowBalloon(string title, string text, ToolTipIcon icon, bool status)
     {
         if (_exiting) return;
-        if (!force && !_settings.ShowBalloon) return;
+        if (status ? !_settings.ShowStatusAlerts : !_settings.ShowBalloon) return;
         if (text.Length > 200) text = text[..200] + "…";
         _tray.ShowBalloonTip(5000, title, text.Length == 0 ? " " : text, icon);
-        _balloonIsChat = !force;   // force=false는 채팅 알림뿐이다
+        _balloonIsChat = !status;   // status=false는 채팅 알림뿐이다
         if (_settings.PlaySound) SystemSounds.Asterisk.Play();
     }
 
@@ -270,7 +280,7 @@ public sealed class TrayContext : ApplicationContext
             LinkState.Stopped => _client == null ? Health.Error : Health.Idle,   // 클라이언트 없음 = 주소 형식 오류
             _ => Health.Warning,
         };
-        _mainForm.SetSynapse(synapseHealth, SynapseText());
+        _mainForm.SetSynapse(synapseHealth, SynapseText(), _link == LinkState.Registered);
 
         var chzzkTabHealth = _link != LinkState.Registered ? Health.Idle
             : _chzzk == ChzzkState.Unknown ? Health.Warning   // 상태 대기
@@ -356,6 +366,7 @@ public sealed class TrayContext : ApplicationContext
 
             current.Path = dlg.ExecutablePath;
             if (module != Module.Synapse) current.AutoActivate = dlg.AutoActivate;   // 시냅스 창에는 체크박스가 없다
+            current.AutoRun = dlg.AutoRun;   // 저장만 한다. 실제 자동 실행은 Proc-1
             bool urlChanged = module == Module.Synapse && dlg.ServerUrl != _settings.ServerUrl;
             if (urlChanged) _settings.ServerUrl = dlg.ServerUrl;
             _settings.Save();

@@ -29,6 +29,6 @@ public sealed class SynapsePage : UserControl
         tabs.TabPages.Add(page);
     }
 
-    /// <summary>상태 하위 탭의 시냅스 줄을 바꾼다.</summary>
-    public void SetSynapse(Health health, string text) => _status.SetSynapse(health, text);
+    /// <summary>상태 하위 탭의 시냅스 줄과 바디·페이스 줄 표시를 바꾼다.</summary>
+    public void SetSynapse(Health health, string text, bool registered) => _status.SetSynapse(health, text, registered);
 }

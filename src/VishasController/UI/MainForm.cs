@@ -101,11 +101,11 @@ public sealed class MainForm : Form
         _chzzkLabel.ForeColor = color;
     }
 
-    /// <summary>시냅스 탭 점과 상태 하위 탭의 시냅스 줄을 바꾼다.</summary>
-    public void SetSynapse(Health health, string status)
+    /// <summary>시냅스 탭 점과 상태 하위 탭의 시냅스 줄을 바꾼다. registered면 바디·페이스 줄을 보인다.</summary>
+    public void SetSynapse(Health health, string status, bool registered)
     {
         SetDot(_synapsePage, health);
-        _synapse.SetSynapse(health, status);
+        _synapse.SetSynapse(health, status, registered);
     }
 
     /// <summary>치지직 탭 점을 바꾼다.</summary>

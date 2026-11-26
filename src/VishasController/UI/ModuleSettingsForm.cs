@@ -1,16 +1,19 @@
 namespace VishasController.UI;
 
 /// <summary>
-/// 모듈 ⚙️ 설정 창(모달). 모든 모듈: 실행 경로. 바디·페이스: 자동 켜기. 시냅스: 서버 주소.
+/// 모듈 ⚙️ 설정 창(모달). 모든 모듈: 실행 경로, 자동 실행. 바디·페이스: 자동 켜기. 시냅스: 서버 주소.
 /// </summary>
 public sealed class ModuleSettingsForm : Form
 {
     readonly TextBox _path;
     readonly CheckBox? _autoActivate;
+    readonly CheckBox _autoRun;
     readonly TextBox? _url;
 
     public string ExecutablePath => _path.Text.Trim();
     public bool AutoActivate => _autoActivate?.Checked ?? false;
+    /// <summary>자동 실행 체크 값. 저장만 하고 실제 실행은 Proc-1.</summary>
+    public bool AutoRun => _autoRun.Checked;
     /// <summary>시냅스 창에서만 쓴다. 다른 모듈은 빈 문자열.</summary>
     public string ServerUrl => _url?.Text.Trim() ?? "";
 
@@ -60,6 +63,11 @@ public sealed class ModuleSettingsForm : Form
             layout.Controls.Add(_url);
             layout.SetColumnSpan(_url, 2);
         }
+
+        var autoRunText = module == Module.Synapse ? "컨트롤러가 켜지면 자동 실행" : "시냅스가 연결되면 자동 실행";
+        _autoRun = new CheckBox { Text = autoRunText, Checked = current.AutoRun, AutoSize = true, Margin = new Padding(3, 9, 3, 3) };
+        layout.Controls.Add(_autoRun);
+        layout.SetColumnSpan(_autoRun, 2);
 
         var ok = new Button { Text = "확인", Width = 75, DialogResult = DialogResult.OK };
         var cancel = new Button { Text = "취소", Width = 75, DialogResult = DialogResult.Cancel };
