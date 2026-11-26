@@ -295,7 +295,7 @@ public sealed class TrayContext : ApplicationContext
             LinkState.Connecting => "접속 중",
             LinkState.Registering => "등록 중",
             LinkState.Registered => "연결됨",
-            LinkState.Waiting => _linkDetail,
+            LinkState.Waiting => WaitingText(),
             LinkState.Unsupported => "41 미지원(서버 업데이트 필요)",
             _ => "",
         };
@@ -327,15 +327,21 @@ public sealed class TrayContext : ApplicationContext
         {
             case LinkState.Registered:
                 return "연결됨 · " + _linkDetail;   // 등록 때 설명이 "연결 번호 N"
-            case LinkState.Waiting:
-                // 설명은 "{이유} · N초 후 다시 접속" 형식이다
-                int i = _linkDetail.LastIndexOf(" · ", StringComparison.Ordinal);
-                return i >= 0 ? "연결 끊김" + _linkDetail[i..] : "연결 끊김";
             case LinkState.Connecting:
                 return "접속 중";
             default:
                 return Describe().server;
         }
+    }
+
+    /// <summary>
+    /// 재접속 대기 글자. 설명은 "{이유} · N초 후 다시 접속" 형식인데, 이유(예외 문구)에 서버 호스트가 섞일 수 있어
+    /// 상태 표시줄·트레이 툴팁·시냅스 줄·로그 어디에도 이유는 쓰지 않는다(CLAUDE.md 안전 규칙 1).
+    /// </summary>
+    string WaitingText()
+    {
+        int i = _linkDetail.LastIndexOf(" · ", StringComparison.Ordinal);
+        return i >= 0 ? "연결 끊김" + _linkDetail[i..] : "연결 끊김";
     }
 
     // ── 설정·종료 ───────────────────────────────────────────
