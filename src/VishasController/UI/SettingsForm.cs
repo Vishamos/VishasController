@@ -18,7 +18,7 @@ public sealed class SettingsForm : Form
 
         var label = new Label
         {
-            Text = "서버 주소 (예: ws://192.168.0.10:4000)",
+            Text = "서버 주소 (예: ws://<서버 PC IP>:4000)",
             Location = new Point(12, 14),
             AutoSize = true,
         };
