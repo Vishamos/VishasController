@@ -12,9 +12,7 @@ description: VishasController에서 커밋할 때 visha-common:git-commit에 더
 - 커밋하지 않는 것: `bin/`, `obj/`, `.vs/`(이미 git 제외), `%LOCALAPPDATA%\VishaSTD\`·`%AppData%\VishasController\`의 파일(저장소 밖)
 
 ## security 실행 조건
-변경이 다음 중 하나에 해당하면 메인 스레드가 `visha-common:security` 에이전트를 부른다.
-- 메인 스레드가 커밋할 때: 커밋 전에 부른다.
-- developer가 커밋했을 때: developer는 security를 부를 수 없으므로, 메인 스레드가 완료 보고를 받은 뒤 push 전에 부른다.
+변경이 다음 중 하나에 해당하면 메인 스레드가 `visha-common:security` 에이전트를 부른다. 이 목록은 **무엇을** 점검할지만 정한다. **언제**(기본은 push 전 1회, 고위험 변경만 커밋 전)는 `visha-common:main-thread` 4절을 따른다.
 
 | 종류 | 대상 |
 |---|---|
