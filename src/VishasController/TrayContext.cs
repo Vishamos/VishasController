@@ -40,8 +40,7 @@ public sealed class TrayContext : ApplicationContext
         // MainForm(Control)을 먼저 만들면 UI 스레드의 SynchronizationContext가 설치된다
         _mainForm = new MainForm();
         _mainForm.Viewed += ClearUnread;
-        _mainForm.SettingsRequested += OpenSettings;
-        _mainForm.ReconnectRequested += async () => await RestartClientAsync();
+        _mainForm.ModuleSettingsRequested += OpenModuleSettings;
         _ui = SynchronizationContext.Current ?? new WindowsFormsSynchronizationContext();
 
         _balloonItem = new ToolStripMenuItem("채팅 알림 풍선", null, (_, _) => ToggleBalloon())
@@ -101,13 +100,18 @@ public sealed class TrayContext : ApplicationContext
         {
             _link = LinkState.Stopped;
             _linkDetail = "서버 주소가 올바르지 않음";
+            _mainForm.AddLog(Module.Synapse, _linkDetail);
             return;
         }
         _client = new SynapseClient(uri, _ui);
         _client.LinkStateChanged += OnLinkStateChanged;
         _client.ChatReceived += OnChat;
         _client.ChzzkStateChanged += OnChzzkState;
-        _client.ServerError += (code, msg) => _mainForm.SetServerStatus($"에러 {code} {msg}", TrayIcons.ColorOf(Health.Warning));
+        _client.ServerError += (code, msg) =>
+        {
+            _mainForm.SetServerStatus($"에러 {code} {msg}", TrayIcons.ColorOf(Health.Warning));
+            _mainForm.AddLog(Module.Synapse, $"에러 {code} {msg}");
+        };
         _client.Start();
     }
 
@@ -145,6 +149,7 @@ public sealed class TrayContext : ApplicationContext
             ShowBalloon("서버가 컨트롤러를 지원하지 않음", "서버에 시그니처 41이 아직 없습니다. 1분마다 다시 시도합니다.", ToolTipIcon.Error, force: true);
 
         if (state == LinkState.Registered) _everRegistered = true;
+        _mainForm.AddLog(Module.Synapse, SynapseText());
         Refresh();
     }
 
@@ -154,6 +159,7 @@ public sealed class TrayContext : ApplicationContext
         _chzzk = state;
         if (prev != state)
         {
+            _mainForm.AddLog(Module.Chzzk, "상태: " + MessageParser.StateValue(state));
             switch (state)
             {
                 case ChzzkState.Disconnected:
@@ -256,7 +262,7 @@ public sealed class TrayContext : ApplicationContext
         _mainForm.SetServerStatus(serverText, TrayIcons.ColorOf(serverHealth));
         _mainForm.SetChzzkStatus(chzzkText, TrayIcons.ColorOf(ChzzkHealth(_chzzk)));
 
-        // 탭·종합 표 점 색 (명세 02 §2.5·§2.6). 상태 표시줄·트레이 아이콘과 기준이 조금 다르다.
+        // 탭·모듈 줄 점 색 (명세 02 §2.4·§2.5). 상태 표시줄·트레이 아이콘과 기준이 조금 다르다.
         var synapseHealth = _link switch
         {
             LinkState.Registered => Health.Ok,
@@ -264,13 +270,12 @@ public sealed class TrayContext : ApplicationContext
             LinkState.Stopped => _client == null ? Health.Error : Health.Idle,   // 클라이언트 없음 = 주소 형식 오류
             _ => Health.Warning,
         };
-        var connection = _link == LinkState.Registered ? _linkDetail : "연결 번호 -";   // 등록 때 설명이 "연결 번호 N"
-        _mainForm.SetSynapse(synapseHealth, serverText, connection);
+        _mainForm.SetSynapse(synapseHealth, SynapseText());
 
         var chzzkTabHealth = _link != LinkState.Registered ? Health.Idle
             : _chzzk == ChzzkState.Unknown ? Health.Warning   // 상태 대기
             : ChzzkHealth(_chzzk);
-        _mainForm.SetChzzk(chzzkTabHealth, chzzkText);
+        _mainForm.SetChzzk(chzzkTabHealth);
         _mainForm.SetUnread(_unread);
     }
 
@@ -313,16 +318,49 @@ public sealed class TrayContext : ApplicationContext
         return (health, server, chzzk);
     }
 
+    /// <summary>
+    /// 시냅스 줄·로그에 쓰는 연결 단계 글자. 접속 중 설명(주소)과 끊긴 이유(예외 문구에 호스트가 섞일 수 있음)는 넣지 않는다.
+    /// </summary>
+    string SynapseText()
+    {
+        switch (_link)
+        {
+            case LinkState.Registered:
+                return "연결됨 · " + _linkDetail;   // 등록 때 설명이 "연결 번호 N"
+            case LinkState.Waiting:
+                // 설명은 "{이유} · N초 후 다시 접속" 형식이다
+                int i = _linkDetail.LastIndexOf(" · ", StringComparison.Ordinal);
+                return i >= 0 ? "연결 끊김" + _linkDetail[i..] : "연결 끊김";
+            case LinkState.Connecting:
+                return "접속 중";
+            default:
+                return Describe().server;
+        }
+    }
+
     // ── 설정·종료 ───────────────────────────────────────────
 
-    async void OpenSettings()
+    async void OpenModuleSettings(Module module)
     {
-        using var dlg = new SettingsForm(_settings.ServerUrl);
-        if (dlg.ShowDialog() != DialogResult.OK) return;
-        if (dlg.ServerUrl == _settings.ServerUrl) return;
-        _settings.ServerUrl = dlg.ServerUrl;
-        _settings.Save();
-        await RestartClientAsync();
+        try
+        {
+            var current = _settings.ModuleOf(module);
+            using var dlg = new ModuleSettingsForm(module, current, module == Module.Synapse ? _settings.ServerUrl : null);
+            if (dlg.ShowDialog(_mainForm) != DialogResult.OK) return;
+
+            current.Path = dlg.ExecutablePath;
+            if (module != Module.Synapse) current.AutoActivate = dlg.AutoActivate;   // 시냅스 창에는 체크박스가 없다
+            bool urlChanged = module == Module.Synapse && dlg.ServerUrl != _settings.ServerUrl;
+            if (urlChanged) _settings.ServerUrl = dlg.ServerUrl;
+            _settings.Save();
+            if (urlChanged) await RestartClientAsync();
+        }
+        catch (Exception ex)
+        {
+            // 설정 파일 쓰기 실패 등. 경로·주소가 섞일 수 있어 예외 종류만 보여 준다.
+            MessageBox.Show(_mainForm, $"설정을 저장하지 못했습니다. ({ex.GetType().Name})", "설정",
+                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
     }
 
     async Task ExitAsync()

@@ -59,6 +59,16 @@ public static class MessageParser
         _ => ChzzkState.Unknown,
     };
 
+    /// <summary>ParseState의 반대. 로그에 규약 값 그대로 남길 때 쓴다. Unknown은 규약 값이 없어 "unknown".</summary>
+    public static string StateValue(ChzzkState state) => state switch
+    {
+        ChzzkState.Disabled => "disabled",
+        ChzzkState.Connected => "connected",
+        ChzzkState.Disconnected => "disconnected",
+        ChzzkState.AuthRequired => "auth_required",
+        _ => "unknown",
+    };
+
     public static ChzzkChat ParseChat(JsonElement data)
     {
         var emojis = new Dictionary<string, string>();

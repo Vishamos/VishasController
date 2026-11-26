@@ -5,7 +5,7 @@ using VishasController.UI.Tabs;
 namespace VishasController.UI;
 
 /// <summary>
-/// 메인 창: 탭 4개와 아래 상태 표시줄. 닫기 버튼을 눌러도 종료하지 않고 트레이로 숨는다.
+/// 메인 창: 탭 5개와 아래 상태 표시줄. 닫기 버튼을 눌러도 종료하지 않고 트레이로 숨는다.
 /// </summary>
 public sealed class MainForm : Form
 {
@@ -13,9 +13,11 @@ public sealed class MainForm : Form
 
     readonly TabControl _tabs;
     readonly TabPage _chzzkPage;
-    readonly Dictionary<TabPage, Color> _dots = new();   // 없는 탭(종합)은 점을 그리지 않는다
-    readonly OverviewTab _overview = new();
+    readonly TabPage _synapsePage;
+    readonly Dictionary<TabPage, Color> _dots = new();   // 없는 탭(로그)은 점을 그리지 않는다
+    readonly SynapsePage _synapse = new();
     readonly ChatTab _chat = new();
+    readonly LogTab _log = new();
     readonly ToolStripStatusLabel _serverLabel;
     readonly ToolStripStatusLabel _chzzkLabel;
     readonly ToolStripStatusLabel _countLabel;
@@ -23,11 +25,8 @@ public sealed class MainForm : Form
     /// <summary>사용자가 치지직 탭을 보고 있게 됐을 때 (안 읽음 표시를 지우는 데 쓴다)</summary>
     public event Action? Viewed;
 
-    /// <summary>종합 탭 시냅스 줄에서 "다시 접속"을 눌렀을 때</summary>
-    public event Action? ReconnectRequested;
-
-    /// <summary>종합 탭 시냅스 줄에서 "주소 설정…"을 눌렀을 때</summary>
-    public event Action? SettingsRequested;
+    /// <summary>모듈 줄의 ⚙️를 눌렀을 때</summary>
+    public event Action<Module>? ModuleSettingsRequested;
 
     public MainForm()
     {
@@ -47,14 +46,14 @@ public sealed class MainForm : Form
         _tabs.DrawItem += DrawTab;
         _tabs.SelectedIndexChanged += (_, _) => { if (IsBeingWatched) Viewed?.Invoke(); };
 
-        AddPage("종합", _overview, dot: null);
+        _synapsePage = AddPage("시냅스", _synapse, dot: TrayIcons.ColorOf(Health.Idle));
         AddPage("OBS", new ObsTab(), dot: TrayIcons.PendingColor);
         _chzzkPage = AddPage(ChzzkTitle, _chat, dot: TrayIcons.ColorOf(Health.Idle));
         AddPage("비샤모스", new VishamosTab(), dot: TrayIcons.PendingColor);
+        AddPage("로그", _log, dot: null);
 
         _chat.CountChanged += UpdateCount;
-        _overview.ReconnectClicked += () => ReconnectRequested?.Invoke();
-        _overview.SettingsClicked += () => SettingsRequested?.Invoke();
+        _synapse.SettingsClicked += m => ModuleSettingsRequested?.Invoke(m);
 
         var status = new StatusStrip();
         _serverLabel = new ToolStripStatusLabel("서버: -");
@@ -102,16 +101,18 @@ public sealed class MainForm : Form
         _chzzkLabel.ForeColor = color;
     }
 
-    /// <summary>종합 탭의 시냅스 줄을 바꾼다.</summary>
-    public void SetSynapse(Health health, string status, string connection) =>
-        _overview.SetSynapse(health, status, connection);
-
-    /// <summary>치지직 탭 점과 종합 탭의 치지직 줄을 바꾼다.</summary>
-    public void SetChzzk(Health health, string status)
+    /// <summary>시냅스 탭 점과 상태 하위 탭의 시냅스 줄을 바꾼다.</summary>
+    public void SetSynapse(Health health, string status)
     {
-        SetDot(_chzzkPage, health);
-        _overview.SetRow("치지직", health, status);
+        SetDot(_synapsePage, health);
+        _synapse.SetSynapse(health, status);
     }
+
+    /// <summary>치지직 탭 점을 바꾼다.</summary>
+    public void SetChzzk(Health health) => SetDot(_chzzkPage, health);
+
+    /// <summary>로그 탭에 한 줄을 더한다. 서버 주소·채팅 내용·닉네임은 넣지 않는다.</summary>
+    public void AddLog(Module module, string text) => _log.Add(module, text);
 
     /// <summary>치지직 탭 제목의 안 읽은 수. 0이면 숫자를 뺀다.</summary>
     public void SetUnread(int count)
