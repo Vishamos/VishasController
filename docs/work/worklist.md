@@ -50,3 +50,8 @@
 - [ ] Test-1 [P2] 테스트 프로젝트 `tests/VishasController.Tests` 추가(xUnit 또는 MSTest, NuGet 승인 필요)와 `MessageParser` 경계값 테스트. 로직이 늘어나는 2단계 시작 때 — 기획: 없음(AI 발견) / 명세: 01 (보류 대기: 테스트 프로젝트 도입 시점)
 
 ## 올린 이슈
+- VishasAgent-#1 security를 커밋마다가 아니라 push 전 1회로 (+ .private 폴더)
+- VishasAgent-#2 developer·security 서브에이전트 기본 모델을 더 싼 모델로
+- VishasAgent-#3 위임 기준: 작은 수정은 메인 스레드가 직접, 설계가 정해진 뒤 구현
+- VishasAgent-#4 프로젝트마다 반복되는 안전 규칙을 main-thread로
+- VishasAgent-#5 회고: 첫 플러그인 세션 토큰 사용(2026-11-26)
