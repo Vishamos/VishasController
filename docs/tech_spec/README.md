@@ -4,4 +4,4 @@
 
 | 번호 | 문서 | 상태 |
 |---|---|---|
-| 01 | `01_chat_receive.md` 치지직 채팅 수신(1단계) | 작성 예정(worklist Spec-1). 그전까지 기준은 `VishasController_시작자료.md` §4∼6 |
+| 01 | `01_chat_receive.md` 치지직 채팅 수신(1단계) | 구현 b2943ea, `해석` 항목 확인 대기(worklist Spec-2) |

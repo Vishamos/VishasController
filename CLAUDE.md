@@ -30,8 +30,7 @@
 ## 지도
 | 위치 | 내용 |
 |---|---|
-| 노션 `VishaSTD / VishasController` | 기획서 원본(사용자 작성, 읽기 전용) |
-| `VishasController_시작자료.md` | VishaSynapse에서 옮겨 온 시작 자료와 1단계 구현 정리(명세 01로 옮길 예정, worklist Spec-1) |
+| 노션 `VishaSTD / VishasController` | 기획서 원본(사용자 작성, 읽기 전용). 2026-11-26 기준 기록 없음 |
 | `docs/tech_spec/` | 기술 명세(구현 기준)와 명세별 "구현 현황" |
 | `docs/work/worklist.md` | 현재 진행과 남은 작업 |
 | `docs/work/plan_review.md` | 노션에 적을 것, 결정됨, 보류 |

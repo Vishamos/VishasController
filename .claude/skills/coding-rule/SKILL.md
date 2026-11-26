@@ -8,7 +8,7 @@ description: VishasController C# 코딩 표준. 코드를 작성·수정·리뷰
 공통 원칙은 `visha-common:coding-common-rule`, 확인 절차는 `simple-test`, 테스트 작성은 `qa-test`를 따른다. 이 스킬은 이 프로젝트에만 해당하는 것을 담는다.
 
 ## 0. 기준
-- 구현 기준은 기술 명세(`docs/tech_spec/`) 하나다. 명세가 아직 없는 1단계 동작은 `VishasController_시작자료.md` §4∼6을 기준으로 한다(worklist Spec-1에서 명세로 옮김).
+- 구현 기준은 기술 명세(`docs/tech_spec/`) 하나다.
 - 서버 규약(시그니처, 등록, 메시지, 에러 코드)은 명세 머리말의 "참조 규약" 경로를 GitHub에서 읽는다(`gh api repos/Vishamos/VishaSynapse/contents/docs/protocol/README.md`). 스킬·기억·시작 자료 요약에 의존하지 않는다.
 - 이 스킬과 어긋나는 작업(예: 기존 파일을 통째로 다시 쓰기)이 필요하면 하기 전에 "규칙 예외 제안"으로 알린다.
 
