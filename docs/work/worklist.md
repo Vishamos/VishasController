@@ -6,7 +6,7 @@
 - 대기:
   - (사용자) UI-5·UI-7 화면 확인: 명세 02 §9 순서 + UI-7(트레이 메뉴, 중요 경고 끄기, 바디·페이스 줄 조건부 표시, ⚙️ 자동 실행 체크박스, 첫 실행 때 서버 주소 유지). 앱 실행해 둠
   - (사용자) push
-  - (사용자) 실제 서버 연동 확인: 서버 구현 완료(VishaSynapse d006f09 Chzzk-4, 규약 59d27fe 그대로). 서버 `npm start` → 치지직 connected → 트레이 초록 → 방송 채팅 1줄 수신. 성공하면 VishaSynapse #9 닫기 가능
+  - (사용자) 실제 서버 연동 확인 — **막힘: VishaSynapse-#11(치지직 인증 403)**. 서버 구현 완료(VishaSynapse d006f09 Chzzk-4, 규약 59d27fe 그대로). 서버 `npm start` → 치지직 connected → 트레이 초록 → 방송 채팅 1줄 수신. 성공하면 VishaSynapse #9 닫기 가능
   - (사용자) TestServer 이상 상황 확인: 채팅 수신·표시(`m`)는 확인됨. 남은 것: `b 20` 알림 묶음, `d`/`a`/`x` 아이콘 색·알림, `kick` 재접속, `--no41` 빨강
   - (사용자) Spec-2: 명세 01의 `해석` 항목 11개 확인
 - 다음: 화면 확인(UI-5·UI-7) → 실제 서버 연동 확인 → Spec-2 → 2단계 범위 정하기(Admin·Proc·UI 보류)
@@ -50,3 +50,4 @@
 - [ ] Test-1 [P2] 테스트 프로젝트 `tests/VishasController.Tests` 추가(xUnit 또는 MSTest, NuGet 승인 필요)와 `MessageParser` 경계값 테스트. 로직이 늘어나는 2단계 시작 때 — 기획: 없음(AI 발견) / 명세: 01 (보류 대기: 테스트 프로젝트 도입 시점)
 
 ## 올린 이슈
+- VishaSynapse-#11 (2026-11-26) 치지직 동의 단계에서 `/auth/v1/authorize` 403, 콜백까지 못 감. 실제 서버 연동 확인이 막힘. 리디렉션 URL 등록 위치 문서화도 요청
