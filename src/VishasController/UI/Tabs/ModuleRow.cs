@@ -1,3 +1,5 @@
+using System.Drawing.Text;
+
 namespace VishasController.UI.Tabs;
 
 /// <summary>
@@ -6,11 +8,23 @@ namespace VishasController.UI.Tabs;
 /// </summary>
 public sealed class ModuleRow : TableLayoutPanel
 {
-    const string ToggleOff = "▶️";
-    const string ToggleOn = "⏹️";
+    // 이모지는 WinForms GDI로 제대로 안 그려져 Windows 아이콘 글꼴의 글리프를 쓴다(명세 02 §4.5)
+    const string RunGlyph = "";
+    const string ToggleOff = "";
+    const string ToggleOn = "";
+    const string SettingsGlyph = "";
+
+    // Win11은 Segoe Fluent Icons, Win10은 Segoe MDL2 Assets. 설치 여부는 한 번만 확인한다
+    static readonly Lazy<string> IconFontName = new(() =>
+    {
+        using var fonts = new InstalledFontCollection();
+        return fonts.Families.Any(f => f.Name == "Segoe Fluent Icons") ? "Segoe Fluent Icons" : "Segoe MDL2 Assets";
+    });
 
     readonly Label _dot;
     readonly Label _status;
+    readonly Font _iconFont;
+    readonly ToolTip _toolTip = new();
 
     /// <summary>⚙️를 눌렀을 때</summary>
     public event Action? SettingsClicked;
@@ -31,15 +45,26 @@ public sealed class ModuleRow : TableLayoutPanel
         var name = new Label { Text = module.DisplayName(), AutoSize = true, Margin = new Padding(3, 8, 3, 3) };
         _status = new Label { Text = "", AutoSize = true, Margin = new Padding(3, 8, 12, 3) };
 
+        // 포인트 단위라 고 DPI에서도 기본 글꼴과 같은 비율로 커진다
+        _iconFont = new Font(IconFontName.Value, Control.DefaultFont.SizeInPoints);
+
         var buttons = new FlowLayoutPanel { AutoSize = true, Margin = Padding.Empty, WrapContents = false };
-        buttons.Controls.Add(new Button { Text = "⏻", AutoSize = true, Enabled = false });
+        var run = new Button { Text = RunGlyph, Font = _iconFont, AutoSize = true, Enabled = false };
+        _toolTip.SetToolTip(run, "실행");
+        buttons.Controls.Add(run);
         if (hasToggle)
         {
-            var toggle = new CheckBox { Text = ToggleOff, Appearance = Appearance.Button, AutoSize = true, Enabled = false };
-            toggle.CheckedChanged += (_, _) => toggle.Text = toggle.Checked ? ToggleOn : ToggleOff;
+            var toggle = new CheckBox { Text = ToggleOff, Font = _iconFont, Appearance = Appearance.Button, AutoSize = true, Enabled = false };
+            _toolTip.SetToolTip(toggle, "기능 켜기");
+            toggle.CheckedChanged += (_, _) =>
+            {
+                toggle.Text = toggle.Checked ? ToggleOn : ToggleOff;
+                _toolTip.SetToolTip(toggle, toggle.Checked ? "기능 끄기" : "기능 켜기");
+            };
             buttons.Controls.Add(toggle);
         }
-        var settings = new Button { Text = "⚙️", AutoSize = true };
+        var settings = new Button { Text = SettingsGlyph, Font = _iconFont, AutoSize = true };
+        _toolTip.SetToolTip(settings, "설정");
         settings.Click += (_, _) => SettingsClicked?.Invoke();
         buttons.Controls.Add(settings);
 
@@ -54,5 +79,15 @@ public sealed class ModuleRow : TableLayoutPanel
     {
         _dot.ForeColor = TrayIcons.ColorOf(health);
         _status.Text = text;
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
+        if (disposing)
+        {
+            _toolTip.Dispose();
+            _iconFont.Dispose();
+        }
     }
 }

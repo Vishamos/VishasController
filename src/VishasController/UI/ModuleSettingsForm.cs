@@ -49,7 +49,7 @@ public sealed class ModuleSettingsForm : Form
 
         if (module is Module.Body or Module.Face)
         {
-            _autoActivate = new CheckBox { Text = "⏻로 실행하면 ▶️ 기능도 켜기", Checked = current.AutoActivate, AutoSize = true, Margin = new Padding(3, 9, 3, 3) };
+            _autoActivate = new CheckBox { Text = "실행하면 기능도 켜기", Checked = current.AutoActivate, AutoSize = true, Margin = new Padding(3, 9, 3, 3) };
             layout.Controls.Add(_autoActivate);
             layout.SetColumnSpan(_autoActivate, 2);
         }
