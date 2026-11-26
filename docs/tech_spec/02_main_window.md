@@ -2,7 +2,7 @@
 
 - **다루는 것:** 트레이에서 여는 컨트롤 창, 탭 5개와 시냅스 탭의 하위 탭 3개, 탭 상태 표시, 모듈 줄의 버튼(⏻ ▶️ ⚙️)과 ⚙️ 설정 창, 로그 탭. 이미 있는 기능(서버 연결, 치지직 채팅·상태)은 연결하고, 나머지는 **자리만 만든다**(비활성 컨트롤).
 - **다루지 않는 것:** ⏻ 실제 실행(Proc-1), ▶️ 기능 켜기·끄기(서버 제어 메시지 필요), 바디·페이스 연결 상태 받기(VishaSynapse Q19-2), OBS·비샤모스 제어, 프리셋 적용, 전역 단축키, 로그 파일 저장.
-- **근거 노션:** `VishaSTD / VishasController` (2026-11-26 02:11 판). 태그 `[vc-tray]`, `[vc-quick_setting]`, `[vc-window]`, `[vc-window-tab]`, `[vc-simple_module]`, `[vc-module-controll]`, `[vc-preset]`, `[vc-preference?]`
+- **근거 노션:** `VishaSTD / VishasController` (2026-11-26 02:11 판). 태그 `[vc-tray]`, `[vc-quick_setting]`, `[vc-window]`, `[vc-window-tab]`, `[vc-simple_module]`, `[vc-module-controll]`, `[vc-preset]`, `[vc-preference]`
 - **참조 규약:** 없음(새 메시지 없음). 서버 메시지는 명세 01을 따른다.
 - **용어:** **모듈** = 컨트롤러가 상태를 확인하는 대상. Synapse 규약의 "클라이언트"와 다르다.
   - **간단 모듈**(`[vc-simple_module]`): 시냅스, 바디, 페이스. 시냅스 탭 › 상태의 줄 하나로 표시(⏻ ▶️ ⚙️)
@@ -59,9 +59,9 @@
 
 | 항목 | 내용 | 구분 | 근거 |
 |---|---|---|---|
-| 5.1 위치 | `%LOCALAPPDATA%\VishaSTD\controller\settings.json`(VishaSynapse의 `VishaSTD\server\`와 나란히). 새 위치에 파일이 없고 옛 위치(`%AppData%\VishasController\settings.json`)에 있으면 한 번 복사해 읽는다(옛 파일은 지우지 않음) | 확정(대화) | `[vc-preference?]`, plan_review 2026-11-26(5차) |
+| 5.1 위치 | `%LOCALAPPDATA%\VishaSTD\controller\settings.json`(VishaSynapse의 `VishaSTD\server\`와 나란히). 새 위치에 파일이 없고 옛 위치(`%AppData%\VishasController\settings.json`)에 있으면 한 번 복사해 읽는다(옛 파일은 지우지 않음) | 확정(대화) | `[vc-preference]`, plan_review 2026-11-26(5차) |
 | 5.2 모듈 설정 | 모듈별 `Path`(문자열, 기본 `""`), `AutoActivate`(불, 기본 `false`, ⏻로 실행하면 ▶️도), `AutoRun`(불, 기본 `false`: 시냅스는 컨트롤러 시작 시, 바디·페이스는 시냅스 등록 시). 시냅스·바디·페이스 3개. 알림 설정에 `ShowStatusAlerts`(불, 기본 `true`) 추가 | 확정(대화) | plan_review 2026-11-26(4차·5차) |
-| 5.4 .env | 지금은 담을 비밀 값이 없어 만들지 않는다. 비밀 키가 생기면 같은 폴더의 `.env`에 둔다 | 확정(대화) | `[vc-preference?]`, plan_review 2026-11-26(5차) |
+| 5.4 .env | 지금은 담을 비밀 값이 없어 만들지 않는다. 비밀 키가 생기면 같은 폴더의 `.env`에 둔다 | 확정(대화) | `[vc-preference]`, plan_review 2026-11-26(5차) |
 | 5.3 옛 설정 파일 | 모듈 설정이 없는 옛 파일도 기본값으로 읽는다 | 확정(대화) | 명세 01 §7.3 |
 
 ## 6. 로그 탭에 남기는 것 (UI-5)
