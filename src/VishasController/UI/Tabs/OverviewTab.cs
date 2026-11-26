@@ -11,7 +11,6 @@ public sealed class OverviewTab : UserControl
     static readonly HashSet<string> RunnableRows = new() { "시냅스", "페이스", "바디" };
 
     readonly Dictionary<string, (Label Dot, Label Text)> _rows = new();
-    readonly Label _address;
     readonly Label _connection;
 
     /// <summary>시냅스 줄의 "다시 접속"을 눌렀을 때</summary>
@@ -35,7 +34,6 @@ public sealed class OverviewTab : UserControl
         table.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
         table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
-        _address = new Label { Text = "서버 주소: -", AutoSize = true, Margin = new Padding(3, 8, 12, 3) };
         _connection = new Label { Text = "연결 번호 -", AutoSize = true, Margin = new Padding(3, 8, 12, 3) };
 
         int row = 0;
@@ -100,7 +98,7 @@ public sealed class OverviewTab : UserControl
         Controls.Add(status);
     }
 
-    /// <summary>시냅스 줄 바로 아래 칸: 서버 주소(가림), 연결 번호, 다시 접속·주소 설정 버튼.</summary>
+    /// <summary>시냅스 줄 바로 아래 칸: 연결 번호, 다시 접속·주소 설정 버튼. 서버 주소는 방송 화면에 잡힐 수 있어 표시하지 않는다.</summary>
     Control CreateSynapseDetail()
     {
         var reconnect = new Button { Text = "다시 접속", AutoSize = true };
@@ -109,17 +107,15 @@ public sealed class OverviewTab : UserControl
         settings.Click += (_, _) => SettingsClicked?.Invoke();
 
         var detail = new FlowLayoutPanel { AutoSize = true, Margin = new Padding(0, 0, 0, 6), WrapContents = false };
-        detail.Controls.AddRange(new Control[] { _address, _connection, reconnect, settings });
+        detail.Controls.AddRange(new Control[] { _connection, reconnect, settings });
         return detail;
     }
 
-    /// <summary>시냅스 줄(점, 상태, 주소, 연결 번호)을 바꾼다.</summary>
-    /// <param name="serverUrl">설정의 서버 주소. 방송 화면에 잡힐 수 있으므로 호스트를 가려 표시한다.</param>
+    /// <summary>시냅스 줄(점, 상태, 연결 번호)을 바꾼다.</summary>
     /// <param name="connection">"연결 번호 N" 또는 "연결 번호 -"</param>
-    public void SetSynapse(Health health, string status, string serverUrl, string connection)
+    public void SetSynapse(Health health, string status, string connection)
     {
         SetRow("시냅스", health, status);
-        _address.Text = "서버 주소: " + MaskHost(serverUrl);
         _connection.Text = connection;
     }
 
@@ -129,12 +125,5 @@ public sealed class OverviewTab : UserControl
         var (dot, label) = _rows[name];
         dot.ForeColor = TrayIcons.ColorOf(health);
         label.Text = text;
-    }
-
-    /// <summary>ws://***:4000 처럼 스킴과 포트만 남긴다. 경로도 보이지 않게 뺀다.</summary>
-    static string MaskHost(string serverUrl)
-    {
-        if (!AppSettings.TryParseServerUrl(serverUrl, out var uri)) return "(주소 형식 오류)";
-        return uri.IsDefaultPort ? $"{uri.Scheme}://***" : $"{uri.Scheme}://***:{uri.Port}";
     }
 }

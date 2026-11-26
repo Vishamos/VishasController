@@ -265,7 +265,7 @@ public sealed class TrayContext : ApplicationContext
             _ => Health.Warning,
         };
         var connection = _link == LinkState.Registered ? _linkDetail : "연결 번호 -";   // 등록 때 설명이 "연결 번호 N"
-        _mainForm.SetSynapse(synapseHealth, serverText, _settings.ServerUrl, connection);
+        _mainForm.SetSynapse(synapseHealth, serverText, connection);
 
         var chzzkTabHealth = _link != LinkState.Registered ? Health.Idle
             : _chzzk == ChzzkState.Unknown ? Health.Warning   // 상태 대기

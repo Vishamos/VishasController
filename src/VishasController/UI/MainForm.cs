@@ -103,8 +103,8 @@ public sealed class MainForm : Form
     }
 
     /// <summary>종합 탭의 시냅스 줄을 바꾼다.</summary>
-    public void SetSynapse(Health health, string status, string serverUrl, string connection) =>
-        _overview.SetSynapse(health, status, serverUrl, connection);
+    public void SetSynapse(Health health, string status, string connection) =>
+        _overview.SetSynapse(health, status, connection);
 
     /// <summary>치지직 탭 점과 종합 탭의 치지직 줄을 바꾼다.</summary>
     public void SetChzzk(Health health, string status)
