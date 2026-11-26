@@ -1,31 +1,28 @@
 using VishasController.Net;
 
-namespace VishasController.UI;
+namespace VishasController.UI.Tabs;
 
 /// <summary>
-/// 최근 채팅 목록 창. 닫기 버튼을 눌러도 종료하지 않고 트레이로 숨는다.
+/// 치지직 탭: 최근 채팅 목록.
 /// </summary>
-public sealed class ChatForm : Form
+public sealed class ChatTab : UserControl
 {
     const int MaxRows = 1000;
 
     readonly ListView _list;
-    readonly ToolStripStatusLabel _serverLabel;
-    readonly ToolStripStatusLabel _chzzkLabel;
-    readonly ToolStripStatusLabel _countLabel;
     int _total;
 
-    /// <summary>사용자가 창을 보고 있게 됐을 때 (안 읽음 표시를 지우는 데 쓴다)</summary>
-    public event Action? Viewed;
+    /// <summary>표시 중인 채팅 수나 받은 채팅 수가 바뀌었을 때</summary>
+    public event Action? CountChanged;
 
-    public ChatForm()
+    /// <summary>목록에 표시 중인 채팅 수</summary>
+    public int Displayed => _list.Items.Count;
+
+    /// <summary>실행 뒤 받은 채팅 수</summary>
+    public int Total => _total;
+
+    public ChatTab()
     {
-        Text = "VishasController · 치지직 채팅";
-        Size = new Size(720, 480);
-        MinimumSize = new Size(420, 240);
-        StartPosition = FormStartPosition.CenterScreen;
-        ShowInTaskbar = true;
-
         _list = new BufferedListView
         {
             Dock = DockStyle.Fill,
@@ -43,30 +40,10 @@ public sealed class ChatForm : Form
 
         var copy = new ContextMenuStrip();
         copy.Items.Add("내용 복사", null, (_, _) => CopySelected());
-        copy.Items.Add("목록 지우기", null, (_, _) => { _list.Items.Clear(); UpdateCount(); });
+        copy.Items.Add("목록 지우기", null, (_, _) => { _list.Items.Clear(); CountChanged?.Invoke(); });
         _list.ContextMenuStrip = copy;
 
-        var status = new StatusStrip();
-        _serverLabel = new ToolStripStatusLabel("서버: -");
-        _chzzkLabel = new ToolStripStatusLabel("치지직: -") { Margin = new Padding(16, 3, 0, 2) };
-        _countLabel = new ToolStripStatusLabel("") { Spring = true, TextAlign = ContentAlignment.MiddleRight };
-        status.Items.AddRange(new ToolStripItem[] { _serverLabel, _chzzkLabel, _countLabel });
-
         Controls.Add(_list);
-        Controls.Add(status);
-
-        Activated += (_, _) => Viewed?.Invoke();
-    }
-
-    /// <summary>창이 보이고 포커스가 있는지 (이때는 알림 풍선을 띄우지 않는다)</summary>
-    public bool IsBeingWatched => Visible && WindowState != FormWindowState.Minimized && ContainsFocus;
-
-    public void ShowAndActivate()
-    {
-        if (!Visible) Show();
-        if (WindowState == FormWindowState.Minimized) WindowState = FormWindowState.Normal;
-        Activate();
-        Viewed?.Invoke();
     }
 
     public void AddChat(ChzzkChat chat)
@@ -90,39 +67,17 @@ public sealed class ChatForm : Form
         while (_list.Items.Count > MaxRows) _list.Items.RemoveAt(0);
         _list.EndUpdate();
         _total++;
-        UpdateCount();
+        CountChanged?.Invoke();
 
         // 사용자가 위로 스크롤해 옛 채팅을 보고 있으면 끌어내리지 않는다
         if (atBottom) item.EnsureVisible();
     }
 
-    public void SetServerStatus(string text, Color color)
+    protected override void OnVisibleChanged(EventArgs e)
     {
-        _serverLabel.Text = "서버: " + text;
-        _serverLabel.ForeColor = color;
-    }
-
-    public void SetChzzkStatus(string text, Color color)
-    {
-        _chzzkLabel.Text = "치지직: " + text;
-        _chzzkLabel.ForeColor = color;
-    }
-
-    protected override void OnFormClosing(FormClosingEventArgs e)
-    {
-        // X 버튼은 숨기기만 한다. 종료는 트레이 메뉴에서.
-        if (e.CloseReason == CloseReason.UserClosing)
-        {
-            e.Cancel = true;
-            Hide();
-            return;
-        }
-        base.OnFormClosing(e);
-    }
-
-    protected override void OnShown(EventArgs e)
-    {
-        base.OnShown(e);
+        base.OnVisibleChanged(e);
+        // 창이 처음 보이거나 이 탭으로 돌아왔을 때 (예전 채팅 창의 OnShown과 같은 처리)
+        if (!Visible) return;
         FitLastColumn();
         if (_list.Items.Count > 0) _list.Items[^1].EnsureVisible();
     }
@@ -149,8 +104,6 @@ public sealed class ChatForm : Form
         var text = string.Join(Environment.NewLine, lines);
         if (text.Length > 0) Clipboard.SetText(text);
     }
-
-    void UpdateCount() => _countLabel.Text = $"표시 {_list.Items.Count} · 받은 채팅 {_total}";
 
     /// <summary>깜빡임 줄인 ListView</summary>
     sealed class BufferedListView : ListView

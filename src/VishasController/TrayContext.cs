@@ -17,7 +17,7 @@ public sealed class TrayContext : ApplicationContext
     readonly SynchronizationContext _ui;
     readonly NotifyIcon _tray;
     readonly TrayIcons _icons = new();
-    readonly ChatForm _chatForm;
+    readonly MainForm _mainForm;
     readonly ToolStripMenuItem _balloonItem;
     readonly ToolStripMenuItem _soundItem;
     readonly System.Windows.Forms.Timer _balloonTimer;
@@ -30,15 +30,18 @@ public sealed class TrayContext : ApplicationContext
     int _unread;
     int _pendingChats;          // 알림 간격 동안 쌓인 채팅 수
     ChzzkChat? _pendingLast;
+    bool _balloonIsChat;        // 마지막으로 띄운 풍선이 채팅 알림인지 (클릭하면 치지직 탭으로)
     bool _exiting;
 
     public TrayContext()
     {
         _settings = AppSettings.Load();
 
-        // ChatForm(Control)을 먼저 만들면 UI 스레드의 SynchronizationContext가 설치된다
-        _chatForm = new ChatForm();
-        _chatForm.Viewed += ClearUnread;
+        // MainForm(Control)을 먼저 만들면 UI 스레드의 SynchronizationContext가 설치된다
+        _mainForm = new MainForm();
+        _mainForm.Viewed += ClearUnread;
+        _mainForm.SettingsRequested += OpenSettings;
+        _mainForm.ReconnectRequested += async () => await RestartClientAsync();
         _ui = SynchronizationContext.Current ?? new WindowsFormsSynchronizationContext();
 
         _balloonItem = new ToolStripMenuItem("채팅 알림 풍선", null, (_, _) => ToggleBalloon())
@@ -47,7 +50,7 @@ public sealed class TrayContext : ApplicationContext
         { Checked = _settings.PlaySound };
 
         var menu = new ContextMenuStrip();
-        menu.Items.Add("채팅 창 열기", null, (_, _) => _chatForm.ShowAndActivate());
+        menu.Items.Add("창 열기", null, (_, _) => _mainForm.ShowAndActivate());
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(_balloonItem);
         menu.Items.Add(_soundItem);
@@ -63,15 +66,19 @@ public sealed class TrayContext : ApplicationContext
             ContextMenuStrip = menu,
             Visible = true,
         };
-        _tray.MouseClick += (_, e) => { if (e.Button == MouseButtons.Left) _chatForm.ShowAndActivate(); };
-        _tray.BalloonTipClicked += (_, _) => _chatForm.ShowAndActivate();
+        _tray.MouseClick += (_, e) => { if (e.Button == MouseButtons.Left) _mainForm.ShowAndActivate(); };
+        _tray.BalloonTipClicked += (_, _) =>
+        {
+            if (_balloonIsChat) _mainForm.ShowChzzkTab();
+            else _mainForm.ShowAndActivate();
+        };
 
         _balloonTimer = new System.Windows.Forms.Timer { Interval = (int)BalloonGap.TotalMilliseconds };
         _balloonTimer.Tick += (_, _) => FlushPendingBalloon();
 
         StartClient();
         Refresh();
-        ShowBalloon("VishasController", "트레이에서 실행 중입니다. 아이콘을 클릭하면 채팅 창이 열립니다.", ToolTipIcon.Info, force: true);
+        ShowBalloon("VishasController", "트레이에서 실행 중입니다. 아이콘을 클릭하면 창이 열립니다.", ToolTipIcon.Info, force: true);
     }
 
     void ToggleBalloon()
@@ -102,7 +109,7 @@ public sealed class TrayContext : ApplicationContext
         _client.LinkStateChanged += OnLinkStateChanged;
         _client.ChatReceived += OnChat;
         _client.ChzzkStateChanged += OnChzzkState;
-        _client.ServerError += (code, msg) => _chatForm.SetServerStatus($"에러 {code} {msg}", TrayIcons.ColorOf(Health.Warning));
+        _client.ServerError += (code, msg) => _mainForm.SetServerStatus($"에러 {code} {msg}", TrayIcons.ColorOf(Health.Warning));
         _client.Start();
     }
 
@@ -172,8 +179,8 @@ public sealed class TrayContext : ApplicationContext
 
     void OnChat(ChzzkChat chat)
     {
-        _chatForm.AddChat(chat);
-        if (_chatForm.IsBeingWatched) return;   // 보고 있으면 알릴 필요 없음
+        _mainForm.AddChat(chat);
+        if (_mainForm.IsBeingWatched) return;   // 보고 있으면 알릴 필요 없음
 
         _unread++;
         Refresh();
@@ -226,6 +233,7 @@ public sealed class TrayContext : ApplicationContext
         if (!force && !_settings.ShowBalloon) return;
         if (text.Length > 200) text = text[..200] + "…";
         _tray.ShowBalloonTip(5000, title, text.Length == 0 ? " " : text, icon);
+        _balloonIsChat = !force;   // force=false는 채팅 알림뿐이다
         if (_settings.PlaySound) SystemSounds.Asterisk.Play();
     }
 
@@ -247,8 +255,25 @@ public sealed class TrayContext : ApplicationContext
             LinkState.Stopped => Health.Idle,
             _ => Health.Warning,
         };
-        _chatForm.SetServerStatus(serverText, TrayIcons.ColorOf(serverHealth));
-        _chatForm.SetChzzkStatus(chzzkText, TrayIcons.ColorOf(ChzzkHealth(_chzzk)));
+        _mainForm.SetServerStatus(serverText, TrayIcons.ColorOf(serverHealth));
+        _mainForm.SetChzzkStatus(chzzkText, TrayIcons.ColorOf(ChzzkHealth(_chzzk)));
+
+        // 탭 점 색 (명세 02 §2.5·§2.6). 상태 표시줄·트레이 아이콘과 기준이 조금 다르다.
+        var synapseHealth = _link switch
+        {
+            LinkState.Registered => Health.Ok,
+            LinkState.Unsupported => Health.Error,
+            LinkState.Stopped => _client == null ? Health.Error : Health.Idle,   // 클라이언트 없음 = 주소 형식 오류
+            _ => Health.Warning,
+        };
+        var connection = _link == LinkState.Registered ? _linkDetail : "연결 번호 -";   // 등록 때 설명이 "연결 번호 N"
+        _mainForm.SetSynapse(synapseHealth, serverText, _settings.ServerUrl, connection);
+
+        var chzzkTabHealth = _link != LinkState.Registered ? Health.Idle
+            : _chzzk == ChzzkState.Unknown ? Health.Warning   // 상태 대기
+            : ChzzkHealth(_chzzk);
+        _mainForm.SetChzzk(chzzkTabHealth, chzzkText);
+        _mainForm.SetUnread(_unread);
     }
 
     static Health ChzzkHealth(ChzzkState s) => s switch
@@ -311,7 +336,7 @@ public sealed class TrayContext : ApplicationContext
         _tray.Visible = false;
         _tray.Dispose();
         _icons.Dispose();
-        _chatForm.Dispose();
+        _mainForm.Dispose();
         ExitThread();
     }
 }
